@@ -20,6 +20,10 @@ This command open browser (google-chrome) and real-time preview on browser.
 
 To stop preview, execute `:LiveMarkDisable`.
 
+## Screen cast
+
+<img src="https://raw.githubusercontent.com/miyakogi/livemark.vim/master/sample.gif">
+
 ## License
 
 [MIT License](https://github.com/miyakogi/livemark.vim/blob/master/LICENSE)
