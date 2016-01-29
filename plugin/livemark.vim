@@ -26,6 +26,11 @@ function! s:check_pymodule(module) abort
 endfunction
 
 function! s:start_server() abort
+  if !has('channel')
+    echoerr 'LiveMark.vim requires +channel feature'
+    return 0
+  endif
+
   let _error_modules = []
   for m in s:requred_modules
     let _err = s:check_pymodule(m)
