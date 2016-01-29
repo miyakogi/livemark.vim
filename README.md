@@ -59,7 +59,7 @@ let g:livemark_vim_port = 8090
 
 ## Screen cast
 
-<!--- <img src="https://raw.githubusercontent.com/miyakogi/livemark.vim/master/sample.gif"> --->
+<img src="https://raw.githubusercontent.com/miyakogi/livemark.vim/master/sample.gif">
 
 ## License
 
