@@ -11,7 +11,7 @@
 <div id="livemark" class="container"></div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script type="text/javascript" src="static/bootstrap.min.js"></script>
-<script type="text/javascript" src="static/livemark.js">
+<script type="text/javascript">
 var ws = new WebSocket('ws://localhost:{{ port }}/ws')
 ws.onmessage = function(e) {
   var x = document.body.scrollLeft
