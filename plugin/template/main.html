@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LiveMark</title>
+<link rel="stylesheet" href="static/bootstrap.min.css">
+<style>
+{{ css }}
+</style>
+</head>
+<body>
+<div id="livemark" class="container"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript" src="static/bootstrap.min.js"></script>
+<script type="text/javascript" src="static/livemark.js">
+var ws = new WebSocket('ws://localhost:{{ port }}/ws')
+ws.onmessage = function(e) {
+  var x = document.body.scrollLeft
+  var y = document.body.scrollTop
+  document.getElementById('livemark').innerHTML = e.data
+  var cur = document.getElementById('vimcursor')
+  if (cur) {
+    pos = y + cur.getBoundingClientRect().bottom - 150
+    window.scrollTo(x, pos)
+  }
+}
+</script>
+</body>
+</html>
+

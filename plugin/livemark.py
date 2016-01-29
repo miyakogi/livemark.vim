@@ -8,6 +8,7 @@ import webbrowser
 
 from tornado import web
 from tornado import websocket
+from tornado import options
 from tornado.platform.asyncio import AsyncIOMainLoop
 from tornado.ioloop import IOLoop
 
@@ -20,27 +21,12 @@ from pygments.lexers import get_lexer_by_name
 
 connections = []
 static_dir = path.join(path.dirname(__file__), 'static')
-browser_port = 8089
-
+template_dir = path.join(path.dirname(__file__), 'template')
 css = HtmlFormatter(style='default').get_style_defs()
-page = '''
-<!DOCTYPE html>
-<html>
-<head>
-<title>LiveMark</title>
-<link rel="stylesheet" href="static/bootstrap.min.css">
-<style>
-{}
-</style>
-</head>
-<body>
-<div id="livemark" class="container"></div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script type="text/javascript" src="static/bootstrap.min.js"></script>
-<script type="text/javascript" src="static/livemark.js"></script>
-</body>
-</html>
-'''.format(css)
+
+options.define('browser', default='google-chrome')
+options.define('browser-port', default=8089)
+options.define('vim-port', default=8090)
 
 
 class HighlighterRenderer(m.HtmlRenderer):
@@ -65,7 +51,7 @@ converter = m.Markdown(HighlighterRenderer(), extensions=('fenced-code',))
 
 class MainHandler(web.RequestHandler):
     def get(self):
-        self.write(page)
+        self.render('main.html', css=css, port=options.options.browser_port)
 
 
 class WSHandler(websocket.WebSocketHandler):
@@ -87,19 +73,21 @@ class VimListener(asyncio.Protocol):
 
 def main():
     AsyncIOMainLoop().install()
-    app = web.Application([
-        ('/', MainHandler),
-        ('/ws', WSHandler),
-        ('/static/(.*)', web.StaticFileHandler, {'path':static_dir}),
-    ])
-    app.listen(browser_port)
+    app = web.Application(
+        [('/', MainHandler), ('/ws', WSHandler),
+         ('/static/(.*)', web.StaticFileHandler, {'path':static_dir}), ],
+        template_path=template_dir,
+    )
+    app.listen(options.options.browser_port)
     loop = asyncio.get_event_loop()
-    coro = loop.create_server(VimListener, 'localhost', 8090)
-    browser = webbrowser.get('google-chrome')
-    browser.open('http://localhost:{}'.format(browser_port))
+    coro = loop.create_server(VimListener, 'localhost',
+                              options.options.vim_port)
+    browser = webbrowser.get(options.options.browser)
+    browser.open('http://localhost:{}'.format(options.options.browser_port))
     loop.run_until_complete(coro)
     loop.run_forever()
 
 
 if __name__ == '__main__':
+    options.parse_command_line()
     main()
