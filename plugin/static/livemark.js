@@ -6,16 +6,6 @@ var ws = new WebSocket('ws://localhost:8089/ws')
     var cur = document.getElementById('vimcursor')
     if (cur) {
       pos = y + cur.getBoundingClientRect().bottom - 150
-      // if (pos >= 0) {
-        window.scrollTo(x, pos)
-        console.log(pos);
-      // } else {
-        // console.log('pos negative');
-        // console.log(pos);
-        // window.scrollTo(x, y)
-      // }
-    } else {
-      console.log('cursor not found');
-      // window.scrollTo(x, y)
+      window.scrollTo(x, pos)
     }
   }
