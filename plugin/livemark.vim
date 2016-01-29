@@ -1,5 +1,10 @@
 
-let g:livemark_python = 'python3'
+" set default values
+let g:livemark_python = get(g:, 'livemark_python', 'python3')
+let g:livemark_browser = get(g:, 'livemark_browser', 'google-chrome')
+let g:livemark_browser_port = get(g:, 'livemark_browser_port', 8089)
+let g:livemark_vim_port = get(g:, 'livemark_vim_port', 8090)
+
 let s:requred_modules = ['tornado', 'misaka', 'pygments']
 let s:pyscript = expand('<sfile>:p:h') . '/run.py'
 let s:server_pid = 0
@@ -11,7 +16,7 @@ function! s:get_text() abort
 endfunction
 
 function! s:send_text() abort
-  let handle = connect('localhost:8090', 'json')
+  let handle = connect('localhost:' . g:livemark_vim_port, 'json')
   call sendexpr(handle, s:get_text(), 0)
   call disconnect(handle)
 endfunction
@@ -42,7 +47,11 @@ function! s:start_server() abort
   if len(_error_modules)
     return 0
   endif
-  let cmd = g:livemark_python . ' ' . s:pyscript
+
+  let l:options = ' --browser=' . g:livemark_browser
+        \     . ' --browser-port=' . g:livemark_browser_port
+        \     . ' --vim-port=' . g:livemark_vim_port
+  let cmd = g:livemark_python . ' ' . s:pyscript . l:options
   let s:server_pid = system(cmd)
 endfunction
 
