@@ -11,6 +11,7 @@ let g:livemark_python = get(g:, 'livemark_python', 'python3')
 let g:livemark_browser = get(g:, 'livemark_browser', 'google-chrome')
 let g:livemark_browser_port = get(g:, 'livemark_browser_port', 8089)
 let g:livemark_vim_port = get(g:, 'livemark_vim_port', 8090)
+let g:livemark_force_pysocket = get(g:, 'livemark_force_pysocket', 0)
 
 command! LiveMark call livemark#enable_livemark()
 command! LiveMarkDisable call livemark#disable_livemark()
