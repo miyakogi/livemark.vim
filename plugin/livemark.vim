@@ -10,9 +10,11 @@ let s:pyscript = expand('<sfile>:p:h') . '/run.py'
 let s:server_pid = 0
 
 function! s:get_text() abort
-  let text_list = getline(0, '$')
-  call insert(text_list, '<span id="vimcursor"></span>', line('.')-1)
-  return text_list
+  let msg = {}
+  let msg.text = getline(0, '$')
+  let msg.line = line('.')
+  let msg.ext = &filetype
+  return msg
 endfunction
 
 function! s:send_text() abort

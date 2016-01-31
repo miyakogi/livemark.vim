@@ -20,6 +20,7 @@ from pygments.lexers import get_lexer_by_name
 
 
 connections = []
+CURSOR_TAG = '<span id="vimcursor"></span>' 
 static_dir = path.join(path.dirname(__file__), 'static')
 template_dir = path.join(path.dirname(__file__), 'template')
 css = HtmlFormatter(style='default').get_style_defs()
@@ -31,19 +32,23 @@ options.define('vim-port', default=8090)
 
 class HighlighterRenderer(m.HtmlRenderer):
     def blockcode(self, text, lang):
-        marker = '<span id="vimcursor"></span>'
+        global CURSOR_TAG
         _cursor = False
-        if marker in text:
-            text = text.replace(marker, '')
+
+        if CURSOR_TAG in text:
+            # When cursor tag is inserted, one extra \n is inserted
+            text = text.replace(CURSOR_TAG + '\n', '')
             _cursor = True
+
+        CURSOR_TAG = CURSOR_TAG.replace('\n', '')
+        head = CURSOR_TAG if _cursor else ''
+
         if not lang:
-            return '\n<pre><code>{}</code></pre>\n'.format(text.strip())
-        lexer = get_lexer_by_name(lang)
-        formatter = HtmlFormatter()
-        if _cursor:
-            return marker + highlight(text, lexer, formatter)
+            return head + '\n<pre><code>{}</code></pre>\n'.format(text)
         else:
-            return highlight(text, lexer, formatter)
+            lexer = get_lexer_by_name(lang)
+            formatter = HtmlFormatter()
+            return head + highlight(text, lexer, formatter)
 
 
 converter = m.Markdown(HighlighterRenderer(), extensions=('fenced-code',))
@@ -64,11 +69,23 @@ class WSHandler(websocket.WebSocketHandler):
 
 class VimListener(asyncio.Protocol):
     def data_received(self, data):
-        msg = data.decode()
-        text = '\n'.join(json.loads(msg)[1])
-        html = converter(text)
+        msg = json.loads(data.decode())[1]
+        tlist = msg['text']
+        line = msg['line']
+
+        global CURSOR_TAG
+        if tlist[line - 1].startswith('```'):
+            # previous line of the code block must be blank line.
+            CURSOR_TAG += '\n'
+        tlist.insert(line - 1, CURSOR_TAG)
+
+        html = converter('\n'.join(tlist))
+        # Remove paragraph which only includes cursor tag
+        html = html.replace('<p>' + CURSOR_TAG + '</p>', CURSOR_TAG)
+
         for conn in connections:
             conn.write_message(html)
+        CURSOR_TAG = CURSOR_TAG.replace('\n', '')
 
 
 def main():
