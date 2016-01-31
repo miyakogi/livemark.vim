@@ -80,11 +80,29 @@ function! s:stop_server() abort
   endif
 endfunction
 
+function! s:check_features() abort
+  if !has('channel')
+    if !has('python')
+      echoerr 'Livemark.vim requires vim which supports "channel" or "python".'
+      return 1
+    endif
+  else
+    if g:livemark_force_pysocket && !has('python')
+      echoerr '"python" is selected to connect server, but this vim does support "python".'
+            \ . ' Use "channel" instead.'
+      let g:livemark_force_pysocket = 0
+    endif
+  endif
+  return 0
+endfunction
+
 function! livemark#enable_livemark() abort
-  call s:start_server()
+  if s:check_features() | return | endif
+
   if !has('channel') || g:livemark_force_pysocket
     call s:initialize_pysocket()
   endif
+  call s:start_server()
   augroup livemark
     autocmd!
     autocmd CursorMoved,TextChanged,TextChangedI <buffer> call livemark#update_preview()
