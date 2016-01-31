@@ -1,10 +1,10 @@
 # Livemark.vim
 
-Real-time markdown preview vim plugin.
+Real-time markdown preview plugin for vim.
 
 ## Requirements
 
-Vim version 7.4.1191+ with `+channel` feature.
+Vim which has `+channel` *or* `+python` feature.
 
 Python 3.4+ (3.5+ is better) and some libraries (misaka, pygments, tornado) are also required to be installed in your `$PATH`.
 
@@ -15,7 +15,7 @@ pip3 install misaka pygments tornado
 ```
 
 Thanks to the new channel feature, this plugin does not requre `+python`, `+python3`, or any other process control plugins.
-Simply use python in your system path.
+But if `+channel` is not available, this plugin uses `:python` for socket connection.
 
 ## Usage
 
@@ -41,13 +41,13 @@ By default, this plugin use `google-chrome` to show preview.
 To use other browser, for example, firefox, set `g:livemark_browser` variable in your vimrc.
 
 ```vim
-let g:livemark_browser = 'firefox'
+let g:livemark_browser = 'firefox'  "default: 'google-chrome'
 ```
 
 This value is passed to python's webbrowser module.
 Available browsers and corresponding values are listed [here](https://docs.python.org/3/library/webbrowser.html#webbrowser.register).
 
-#### Port
+#### Connections
 
 For now, this plugin uses two ports; one for tornado web-server (8089), and the other for sending markdown texts from vim (8090).
 If you want to change these ports, add the following lines to your vimrc and change values as you like.
@@ -55,6 +55,12 @@ If you want to change these ports, add the following lines to your vimrc and cha
 ```vim
 let g:livemark_browser_port = 8089
 let g:livemark_vim_port = 8090
+```
+
+The below setting forces to use `python`, instead of `channel`:
+
+```vim
+let g:livemark_force_pysocket = 1  "default: 0
 ```
 
 ## Screen cast
