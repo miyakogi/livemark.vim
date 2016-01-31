@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
 from os import path
 import json
 import asyncio
@@ -18,11 +19,13 @@ from pygments.styles import get_style_by_name
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 
+current_dir = path.dirname(__file__)
+sys.path.insert(0, path.join(current_dir, 'wdom'))
 
 connections = []
 CURSOR_TAG = '<span id="vimcursor"></span>' 
-static_dir = path.join(path.dirname(__file__), 'static')
-template_dir = path.join(path.dirname(__file__), 'template')
+static_dir = path.join(current_dir, 'static')
+template_dir = path.join(current_dir, 'template')
 css = HtmlFormatter(style='default').get_style_defs()
 
 options.define('browser', default='google-chrome')
