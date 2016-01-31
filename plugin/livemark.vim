@@ -1,3 +1,10 @@
+scriptencoding utf-8
+
+if get(g:, 'loaded_livemark', 0)
+  finish
+else
+  let g:loaded_livemark = 1
+endif
 
 " set default values
 let g:livemark_python = get(g:, 'livemark_python', 'python3')
@@ -81,3 +88,5 @@ endfunction
 
 command! LiveMark call s:enable_livemark()
 command! LiveMarkDisable call s:disable_livemark()
+
+" vim set\ ts=2\ sts=2\ sw=2\ et
