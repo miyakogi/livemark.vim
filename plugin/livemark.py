@@ -10,7 +10,6 @@ from functools import partial
 
 from tornado import web
 from tornado import websocket
-from tornado import options
 from tornado.platform.asyncio import AsyncIOMainLoop
 
 import misaka as m
@@ -21,6 +20,7 @@ from pygments.lexers import get_lexer_by_name
 current_dir = path.dirname(__file__)
 sys.path.insert(0, path.join(current_dir, 'wdom'))
 
+from wdom import options
 from wdom.tag import Div, Style, H2
 from wdom.document import get_document
 from wdom.server import get_app, start_server
@@ -33,9 +33,9 @@ static_dir = path.join(current_dir, 'static')
 template_dir = path.join(current_dir, 'template')
 css = HtmlFormatter(style='default').get_style_defs()
 
-options.define('browser', default='google-chrome')
-options.define('browser-port', default=8089)
-options.define('vim-port', default=8090)
+options.parser.define('browser', default='google-chrome', type=str)
+options.parser.define('browser-port', default=8089, type=int)
+options.parser.define('vim-port', default=8090, type=int)
 
 
 class HighlighterRenderer(m.HtmlRenderer):
@@ -67,7 +67,7 @@ converter = m.Markdown(HighlighterRenderer(), extensions=(
 
 class MainHandler(web.RequestHandler):
     def get(self):
-        self.render('main.html', css=css, port=options.options.browser_port)
+        self.render('main.html', css=css, port=options.config.browser_port)
 
 
 class WSHandler(websocket.WebSocketHandler):
@@ -171,13 +171,13 @@ def main():
     VimListener._mount_point.appendChild(H2('LiveMark is running...'))
     app = get_app(doc)
     app.add_static_path('static', static_dir)
-    server = start_server(app, port=options.options.browser_port)
+    server = start_server(app, port=options.config.browser_port)
 
     loop = asyncio.get_event_loop()
     coro = loop.create_server(VimListener, 'localhost',
-                              options.options.vim_port)
-    browser = webbrowser.get(options.options.browser)
-    browser.open('http://localhost:{}'.format(options.options.browser_port))
+                              options.config.vim_port)
+    browser = webbrowser.get(options.config.browser)
+    browser.open('http://localhost:{}'.format(options.config.browser_port))
     try:
         loop.run_until_complete(coro)
         loop.run_forever()
