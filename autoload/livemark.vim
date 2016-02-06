@@ -54,7 +54,7 @@ function! s:check_pymodule(module) abort
   endif
 endfunction
 
-function! s:start_server() abort
+function! s:check_pymodules() abort
   let _error_modules = []
   for m in s:requred_modules
     let _err = s:check_pymodule(m)
@@ -64,9 +64,13 @@ function! s:start_server() abort
     endif
   endfor
   if len(_error_modules)
+    return 1
+  else
     return 0
   endif
+endfunction
 
+function! s:start_server() abort
   let l:options = ' --browser=' . g:livemark_browser
         \     . ' --browser-port=' . g:livemark_browser_port
         \     . ' --vim-port=' . g:livemark_vim_port
@@ -98,6 +102,7 @@ endfunction
 
 function! livemark#enable_livemark() abort
   if s:check_features() | return | endif
+  if s:check_pymodules() | return | endif
 
   if !has('channel') || g:livemark_force_pysocket
     call s:initialize_pysocket()
