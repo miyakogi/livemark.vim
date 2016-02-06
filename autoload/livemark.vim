@@ -7,7 +7,7 @@ let s:server_pid = 0
 function! s:get_msg() abort
   let msg = {}
   let msg.text = getline(0, '$')
-  let msg.line = line('.')
+  let msg.line = line('w0')
   let msg.ext = &filetype
   return msg
 endfunction
