@@ -13,9 +13,9 @@ function! s:get_msg() abort
 endfunction
 
 function! s:send_by_channel() abort
-  let handle = connect('localhost:' . g:livemark_vim_port, 'json')
-  call sendexpr(handle, s:get_msg(), 0)
-  call disconnect(handle)
+  let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json'})
+  call ch_sendexpr(handle, s:get_msg(), 0)
+  call ch_close(handle)
 endfunction
 
 function! s:initialize_pysocket() abort
@@ -85,7 +85,7 @@ function! s:stop_server() abort
 endfunction
 
 function! s:check_features() abort
-  if !has('channel')
+  if v:version < 704 || !has('patch1263') || !has('channel') 
     if !has('python')
       echoerr 'Livemark.vim requires vim which supports "channel" or "python".'
       return 1
