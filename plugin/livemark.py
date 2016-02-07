@@ -261,7 +261,7 @@ def main():
     mount_point.appendChild(H2('LiveMark is running...'))
     app = get_app(doc, debug=True)
     app.add_static_path('static', static_dir)
-    server = start_server(app, port=options.config.browser_port)
+    web_server = start_server(app, port=options.config.browser_port)
 
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
