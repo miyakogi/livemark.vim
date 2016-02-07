@@ -13,7 +13,7 @@ function! s:get_msg() abort
 endfunction
 
 function! s:send_by_channel() abort
-  let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json'})
+  let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json', 'waittime':3000})
   call ch_sendexpr(handle, s:get_msg(), 0)
   call ch_close(handle)
 endfunction
