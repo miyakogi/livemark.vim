@@ -274,7 +274,7 @@ def main():
         loop.run_forever()
     except KeyboardInterrupt:
         vim_server.stop()
-        server.stop()
+        web_server.stop()
 
 
 if __name__ == '__main__':
