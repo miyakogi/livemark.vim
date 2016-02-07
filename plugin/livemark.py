@@ -69,6 +69,10 @@ class WSHandler(websocket.WebSocketHandler):
         connections.remove(self)
 
 
+class VimListener(asyncio.Protocol):
+    pass
+
+
 class Server(object):
     def __init__(self, address='localhost', port=8090, loop=None, doc=None,
                  mount_point=None):
@@ -78,21 +82,31 @@ class Server(object):
             self.loop = asyncio.get_event_loop()
         else:
             self.loop = loop
-        self.listener = asyncio.Protocol
-        self.listener.data_received = self.data_received
 
         self.doc = doc
         self.script = None
         self.mount_point = mount_point
+
+        self.listener = VimListener
+        self.listener.connection_made = self.connection_made
+        self.listener.data_received = self.data_received
         self._tasks = []
+        self.transport = None
 
     def start(self):
         self.coro_server = self.loop.create_server(self.listener, self.address,
                                                    self.port)
-        self.server_task = asyncio.ensure_future(self.coro_server)
+        self.server_task = self.loop.run_until_complete(self.coro_server)
         return self.server_task
 
+    def stop(self):
+        self.server_task.close()
+
+    def connection_made(self, transport):
+        self.transport = transport
+
     def data_received(self, data):
+        self.transport.close()
         msg = json.loads(data.decode())[1]
         tlist = msg['text']
         line = msg['line']
@@ -267,6 +281,7 @@ def main():
         vim_server.start()
         loop.run_forever()
     except KeyboardInterrupt:
+        vim_server.stop()
         server.stop()
 
 
