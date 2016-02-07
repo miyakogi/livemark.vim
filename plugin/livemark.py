@@ -21,7 +21,7 @@ current_dir = path.dirname(__file__)
 sys.path.insert(0, path.join(current_dir, 'wdom'))
 
 from wdom import options
-from wdom.tag import Div, Style, H2
+from wdom.tag import Div, Style, H2, Script, WebElement
 from wdom.document import get_document
 from wdom.server import get_app, start_server
 from wdom.parser import parse_html
@@ -40,25 +40,12 @@ options.parser.define('vim-port', default=8090, type=int)
 
 class HighlighterRenderer(m.HtmlRenderer):
     def blockcode(self, text, lang):
-        # global CURSOR_TAG
-        # _cursor = False
-
-        # if CURSOR_TAG in text:
-        #     # When cursor tag is inserted, one extra \n is inserted
-        #     text = text.replace(CURSOR_TAG + '\n', '')
-        #     _cursor = True
-
-        # CURSOR_TAG = CURSOR_TAG.replace('\n', '')
-        # head = CURSOR_TAG if _cursor else ''
-
         if not lang:
-            # return head + '\n<pre><code>{}</code></pre>\n'.format(text)
             return '\n<pre><code>{}</code></pre>\n'.format(text)
         else:
             lexer = get_lexer_by_name('python', stripall=True)
             lexer = PythonLexer()
             formatter = HtmlFormatter(linenos=True, cssclass="source")
-            # return head + highlight(text, lexer, formatter)
             html = highlight(text, lexer, formatter)
             return html
 
@@ -82,12 +69,28 @@ class WSHandler(websocket.WebSocketHandler):
         connections.remove(self)
 
 
-class VimListener(asyncio.Protocol):
-    _mount_point = None
+class Server(object):
+    def __init__(self, address='localhost', port=8090, loop=None, doc=None,
+                 mount_point=None):
+        self.address = address
+        self.port = port
+        if loop is None:
+            self.loop = asyncio.get_event_loop()
+        else:
+            self.loop = loop
+        self.listener = asyncio.Protocol
+        self.listener.data_received = self.data_received
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self.doc = doc
+        self.script = None
+        self.mount_point = mount_point
         self._tasks = []
+
+    def start(self):
+        self.coro_server = self.loop.create_server(self.listener, self.address,
+                                                   self.port)
+        self.server_task = asyncio.ensure_future(self.coro_server)
+        return self.server_task
 
     def data_received(self, data):
         msg = json.loads(data.decode())[1]
@@ -97,102 +100,92 @@ class VimListener(asyncio.Protocol):
         for task in self._tasks:
             if not task.done() and not task.cancelled():
                 task.cancel()
+                print('cancelled task')
             self._tasks.remove(task)
         try:
-            self._tasks.append(asyncio.ensure_future(self._update(tlist, line)))
+            self._tasks.append(
+                asyncio.ensure_future(self._update(tlist, line)))
         except asyncio.CancelledError:
             pass
 
     @asyncio.coroutine
     def _update(self, tlist, line):
         _l = []
-        self._blank_lines = 0
+        blank_lines = 0
         i = 1
         while i < len(tlist):
             if tlist[i] == '' and tlist[i - 1] == '':
-                self._blank_lines += 1
+                blank_lines += 1
                 i += 1
                 continue
             else:
                 _l.append(tlist[i])
                 i += 1
 
-        self.cur_line = line - self._blank_lines
-        html = yield from self.convert_to_html(tlist, self.cur_line)
+        cur_line = line - blank_lines
+        html = yield from self.convert_to_html(tlist)
+        print('html')
         yield from self.mount_html(html)
-        yield from self._move_to_cursor()
+        print('mounted html')
+        yield from self.move_cursor(cur_line)
+        print('done')
 
     @asyncio.coroutine
-    def convert_to_html(self, tlist, line):
-        # global CURSOR_TAG
-        # if tlist[line - 1].startswith('```'):
-        #     # previous line of the code block must be blank line.
-        #     CURSOR_TAG += '\n'
-        # tlist.insert(line - 1, CURSOR_TAG)
-
-        _html = converter('\n'.join(tlist))
-        # self._mount_point.innerHTML = _html
-        # Remove paragraph which only includes cursor tag
-        # html = html.replace('<p>' + CURSOR_TAG + '</p>', CURSOR_TAG)
-        # CURSOR_TAG = CURSOR_TAG.replace('\n', '')
-
-        html_list = _html.splitlines()
-        html_list.insert(line - 1, CURSOR_TAG)
-        html = '\n'.join(html_list)
-        return html
+    def convert_to_html(self, tlist):
+        md = '\n'.join(tlist)
+        yield from asyncio.sleep(0.0)
+        return converter(md)
 
     @asyncio.coroutine
     def mount_html(self, html):
         fragment = parse_html(html)
-        if self._mount_point.length < 1:
-            self._mount_point.appendChild(fragment)
+        if self.mount_point.length < 1:
+            self.mount_point.appendChild(fragment)
         else:
             diff = yield from self.find_diff_node(fragment)
             for _i in diff['inserted']:
-                self._mount_point.insertBefore(_i[1], _i[0])
-                print('insert:', _i[1].html)
+                self.mount_point.insertBefore(_i[1], _i[0])
             for _d in diff['deleted']:
-                self._mount_point.removeChild(_d)
-                print('delete:', _d.html)
+                self.mount_point.removeChild(_d)
             for _a in diff['appended']:
-                self._mount_point.appendChild(_a)
-                print('append:', _a.html)
+                self.mount_point.appendChild(_a)
 
     @asyncio.coroutine
-    def _move_to_cursor(self):
-        print('cursor move called')
-        if self._mount_point is not None and self._mount_point.ownerDocument:
-            cursor = self._mount_point.ownerDocument.getElementById('vimcursor')
-            body = self._mount_point.ownerDocument.body
-            try:
-                fs = asyncio.gather(cursor.getBoundingClientRect(),
-                                    cursor.scrollY())
-                done = yield from asyncio.wait_for(fs, 0.1)
-            except (asyncio.CancelledError, asyncio.TimeoutError):
-                return
-            print(done)
-            _rect = done[0]
-            _y = done[1]
-            if _rect is None or _y is None:
-                return
-            cursor_top = _rect.get('top')
-            body_y = _y.get('y')
-            if cursor_top is None or body_y is None:
-                return
-            cursor.scrollTo(0, body_y + cursor_top)
-            print('cursor move done')
-        else:
-            print('cursor not found')
+    def move_cursor(self, line):
+        if self.mount_point is not None and self.mount_point.ownerDocument:
+            _l = 0
+            elm = self.mount_point.firstChild
+            while elm is not None:
+                yield from asyncio.sleep(0.0)
+                _l += elm.textContent.count('\n')
+                if _l >= line:
+                    break
+                elm = elm.nextSibling
+
+            if elm is not None:
+                if isinstance(elm, WebElement):
+                    self.move_to(elm.id)
+                else:
+                    while elm is not None:
+                        elm = elm.previousSibling
+                        if isinstance(elm, WebElement):
+                            self.move_to(elm.id)
+                            break
+
+    def move_to(self, id):
+        script = 'moveToElement("{}")'.format(id)
+        self.mount_point.js_exec('eval', script=script)
 
     def _is_same_node(self, node1, node2):
         if node1.nodeType == node2.nodeType:
             if node1.nodeType == node1.TEXT_NODE:
                 return node1.textContent == node2.textContent
             else:
-                return node1.tagName == node2.tagName \
-                    and node1.attributes == node2.attributes \
-                    and node1.classList == node2.classList \
-                    and node1.innerHTML == node2.innerHTML
+                # return node1.tagName == node2.tagName \
+                #     and node1.attributes == node2.attributes \
+                #     and node1.classList == node2.classList \
+                #     and node1.innerHTML == node2.innerHTML
+                return node1.html_noid == node2.html_noid
         else:
             return False
 
@@ -201,7 +194,7 @@ class VimListener(asyncio.Protocol):
         _deleted = []
         _inserted = []
 
-        node1 = self._mount_point.firstChild
+        node1 = self.mount_point.firstChild
         node2 = tree.firstChild
         last_node2 = node2
         while node1 is not None and node2 is not None:  # Loop over old html
@@ -246,21 +239,32 @@ def main():
     doc.add_jsfile('static/bootstrap.min.js')
     doc.add_cssfile('static/bootstrap.min.css')
     doc.head.appendChild(Style(css))
-    VimListener._mount_point = Div(parent=doc.body, class_='container')
-    VimListener._mount_point.appendChild(H2('LiveMark is running...'))
-    app = get_app(doc)
+    script = Script(parent=doc.body)
+    script.innerHTML = '''
+        function moveToElement(id) {
+            var elm = document.getElementById(id)
+            if (elm) {
+                var x = window.scrollX
+                var rect = elm.getBoundingClientRect()
+                window.scrollTo(x, rect.top + window.scrollY)
+                console.log(elm.textContent)
+            }
+        }
+    '''
+    mount_point = Div(parent=doc.body, class_='container')
+    mount_point.appendChild(H2('LiveMark is running...'))
+    app = get_app(doc, debug=True)
     app.add_static_path('static', static_dir)
     server = start_server(app, port=options.config.browser_port)
 
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-    coro = loop.create_server(VimListener, 'localhost',
-                              options.config.vim_port)
+    vim_server = Server(port=options.config.vim_port, loop=loop, doc=doc,
+                        mount_point=mount_point)
     browser = webbrowser.get(options.config.browser)
     browser.open('http://localhost:{}'.format(options.config.browser_port))
     try:
-        asyncio.ensure_future(coro)
-        # loop.run_until_complete(coro)
+        vim_server.start()
         loop.run_forever()
     except KeyboardInterrupt:
         server.stop()
