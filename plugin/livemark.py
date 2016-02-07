@@ -114,7 +114,6 @@ class Server(object):
         for task in self._tasks:
             if not task.done() and not task.cancelled():
                 task.cancel()
-                print('cancelled task')
             self._tasks.remove(task)
         try:
             self._tasks.append(
@@ -138,11 +137,8 @@ class Server(object):
 
         cur_line = line - blank_lines
         html = yield from self.convert_to_html(tlist)
-        print('html')
         yield from self.mount_html(html)
-        print('mounted html')
         yield from self.move_cursor(cur_line)
-        print('done')
 
     @asyncio.coroutine
     def convert_to_html(self, tlist):
@@ -195,10 +191,6 @@ class Server(object):
             if node1.nodeType == node1.TEXT_NODE:
                 return node1.textContent == node2.textContent
             else:
-                # return node1.tagName == node2.tagName \
-                #     and node1.attributes == node2.attributes \
-                #     and node1.classList == node2.classList \
-                #     and node1.innerHTML == node2.innerHTML
                 return node1.html_noid == node2.html_noid
         else:
             return False
