@@ -51,7 +51,10 @@ class HighlighterRenderer(m.HtmlRenderer):
             return head + highlight(text, lexer, formatter)
 
 
-converter = m.Markdown(HighlighterRenderer(), extensions=('fenced-code',))
+converter = m.Markdown(HighlighterRenderer(), extensions=(
+    'fenced-code',
+    'tables',
+))
 
 
 class MainHandler(web.RequestHandler):
