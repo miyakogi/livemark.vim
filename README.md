@@ -23,7 +23,7 @@ This plugin is using git submodule.
 
 If you are using [NeoBundle](https://github.com/Shougo/neobundle.vim) to manage plugins, it will automatically enable submodules by default. So you can install this plugin by simply adding `NeoBundle 'miyakogi/livemark.vim'` in your vimrc and then execute `:NeoBundleInstall`.
 
-However, if you are using other plugin manager which does not support submodules, or installing manually, you need to update submodule after installation. To manually install this plugin, please execute `git clone --recursive`.
+However, if you are using other plugin manager which does not support submodules, or installing manually, you need to update submodule after installation. To manually install this plugin, please execute `git clone --recursive https://github.com/miyakogi/livemark.vim`.
 
 ## Usage
 
