@@ -17,6 +17,24 @@ pip3 install misaka pygments tornado
 Thanks to the new channel feature, this plugin does not requre `+python`, `+python3`, or any other process control plugins.
 But if `+channel` is not available, this plugin uses `:python` for socket connection.
 
+## Install
+
+This plugin is using git submodule.
+
+If you are using [NeoBundle](https://github.com/Shougo/neobundle.vim) to manage plugins, it will automatically enable submodules by default. So you can install this plugin by simply adding `NeoBundle 'miyakogi/livemark.vim'` in your vimrc and then execute `:NeoBundleInstall`.
+
+However, if you are using other plugin manager which does not support submodules, or installing manually, you need to update submodule after installation.
+
+Manual installation:
+
+1. clone this repository and add this repository to `runtimepath`
+    - `git clone https://github.com/miyakogi/livemark.vim`
+    - in vimrc, add `set runtimepath+=/path/to/livemark.vim`
+2. `cd` to `livemark.vim`
+    - `cd livemark.vim`
+3. initialize and update submodule
+    - `git submodule init && git submodule update`
+
 ## Usage
 
 Open markdown file and execute `:LiveMark`.
@@ -45,19 +63,19 @@ let g:livemark_browser = 'firefox'  "default: 'google-chrome'
 ```
 
 This value is passed to python's webbrowser module.
-Available browsers and corresponding values are listed [here](https://docs.python.org/3/library/webbrowser.html#webbrowser.register).
+Available browsers and corresponding names are listed [here](https://docs.python.org/3/library/webbrowser.html#webbrowser.register).
 
 #### Connections
 
 For now, this plugin uses two ports; one for tornado web-server (8089), and the other for sending markdown texts from vim (8090).
-If you want to change these ports, add the following lines to your vimrc and change values as you like.
+If you want to change these port numbers, add the following lines to your vimrc and change values as you like.
 
 ```vim
 let g:livemark_browser_port = 8089
 let g:livemark_vim_port = 8090
 ```
 
-The below setting forces to use `python`, instead of `channel`:
+The following setting forces to use `python` to send markdown text, instead of `channel`:
 
 ```vim
 let g:livemark_force_pysocket = 1  "default: 0
