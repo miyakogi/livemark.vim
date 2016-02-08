@@ -265,12 +265,11 @@ def main():
     '''
     mount_point = Div(parent=doc.body, class_='container')
     mount_point.appendChild(H2('LiveMark is running...'))
-    app = get_app(doc, debug=True)
+    app = get_app(doc)
     app.add_static_path('static', static_dir)
     web_server = start_server(app, port=options.config.browser_port)
 
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
     vim_server = Server(port=options.config.vim_port, loop=loop, doc=doc,
                         mount_point=mount_point)
     browser = webbrowser.get(options.config.browser)
