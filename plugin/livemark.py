@@ -86,6 +86,7 @@ class Server(object):
         self.doc = doc
         self.script = None
         self.mount_point = mount_point
+        self.tlist = []
 
         self.listener = VimListener
         self.listener.connection_made = self.connection_made
@@ -107,38 +108,29 @@ class Server(object):
 
     def data_received(self, data):
         self.transport.close()
-        msg = json.loads(data.decode())[1]
-        tlist = msg['text']
-        line = msg['line']
-
         for task in self._tasks:
             if not task.done() and not task.cancelled():
                 task.cancel()
             self._tasks.remove(task)
+
+        msg = json.loads(data.decode())[1]
+        line = msg['line']
+        if 'text' in msg:
+            self.tlist = msg['text']
+            _task = self.update_preview
+        else:
+            _task = self.move_cursor
+
         try:
-            self._tasks.append(
-                asyncio.ensure_future(self._update(tlist, line)))
+            self._tasks.append(asyncio.ensure_future(_task(line)))
         except asyncio.CancelledError:
             pass
 
     @asyncio.coroutine
-    def _update(self, tlist, line):
-        _l = []
-        blank_lines = 0
-        i = 1
-        while i < len(tlist):
-            if tlist[i] == '' and tlist[i - 1] == '':
-                blank_lines += 1
-                i += 1
-                continue
-            else:
-                _l.append(tlist[i])
-                i += 1
-
-        cur_line = line - blank_lines
-        html = yield from self.convert_to_html(tlist)
+    def update_preview(self, line):
+        html = yield from self.convert_to_html(self.tlist)
         yield from self.mount_html(html)
-        yield from self.move_cursor(cur_line)
+        yield from self.move_cursor(line)
 
     @asyncio.coroutine
     def convert_to_html(self, tlist):
@@ -162,13 +154,24 @@ class Server(object):
 
     @asyncio.coroutine
     def move_cursor(self, line):
+        blank_lines = 0
+        i = 1
+        while i < len(self.tlist):
+            if self.tlist[i] == '' and self.tlist[i - 1] == '':
+                blank_lines += 1
+                i += 1
+                continue
+            else:
+                i += 1
+        cur_line = line - blank_lines
+
         if self.mount_point is not None and self.mount_point.ownerDocument:
             _l = 0
             elm = self.mount_point.firstChild
             while elm is not None:
                 yield from asyncio.sleep(0.0)
                 _l += elm.textContent.count('\n')
-                if _l >= line:
+                if _l >= cur_line:
                     break
                 elm = elm.nextSibling
 

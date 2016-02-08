@@ -3,6 +3,7 @@ scriptencoding utf-8
 let s:requred_modules = ['tornado', 'misaka', 'pygments']
 let s:pyscript = expand('<sfile>:p:h:h') . '/plugin/run.py'
 let s:server_pid = 0
+let s:initialized_preview = 0
 
 function! s:get_msg() abort
   let msg = {}
@@ -12,9 +13,9 @@ function! s:get_msg() abort
   return msg
 endfunction
 
-function! s:send_by_channel() abort
+function! s:send_by_channel(msg) abort
   let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json', 'waittime':3000})
-  call ch_sendexpr(handle, s:get_msg(), 0)
+  call ch_sendexpr(handle, a:msg, 0)
   call ch_close(handle)
 endfunction
 
@@ -25,9 +26,9 @@ livemark_vim_port = int(vim.eval('g:livemark_vim_port'))
 EOF
 endfunction
 
-function! s:send_by_pysocket() abort
+function! s:send_by_pysocket(msg) abort
   python <<EOF
-msg = vim.eval('s:get_msg()')
+msg = vim.eval('a:msg')
 msg['line'] = int(msg['line'])
 
 msg = json.dumps([0, msg]).encode('utf-8')
@@ -37,12 +38,27 @@ sock.close()
 EOF
 endfunction
 
-function! livemark#update_preview() abort
+function! s:send(msg) abort
   if has('channel') && !g:livemark_force_pysocket
-    call s:send_by_channel()
+    call s:send_by_channel(a:msg)
   else
-    call s:send_by_pysocket()
+    call s:send_by_pysocket(a:msg)
   endif
+endfunction
+
+function! livemark#move_cursor() abort
+  if !s:initialized_preview
+    call livemark#update_preview()
+    let s:initialized_preview = 1
+    return
+  endif
+  let msg = {}
+  let msg.line = line('w0')
+  call s:send(msg)
+endfunction
+
+function! livemark#update_preview() abort
+  call s:send(s:get_msg())
 endfunction
 
 function! s:check_pymodule(module) abort
@@ -110,7 +126,8 @@ function! livemark#enable_livemark() abort
   call s:start_server()
   augroup livemark
     autocmd!
-    autocmd CursorMoved,TextChanged,TextChangedI <buffer> call livemark#update_preview()
+    autocmd TextChanged,TextChangedI <buffer> call livemark#update_preview()
+    autocmd CursorMoved <buffer> call livemark#move_cursor()
     autocmd VimLeave * call s:stop_server()
   augroup END
 endfunction
