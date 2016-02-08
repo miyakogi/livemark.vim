@@ -5,14 +5,6 @@ let s:pyscript = expand('<sfile>:p:h:h') . '/plugin/run.py'
 let s:server_pid = 0
 let s:initialized_preview = 0
 
-function! s:get_msg() abort
-  let msg = {}
-  let msg.text = getline(0, '$')
-  let msg.line = line('w0')
-  let msg.ext = &filetype
-  return msg
-endfunction
-
 function! s:send_by_channel(msg) abort
   let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json', 'waittime':3000})
   call ch_sendexpr(handle, a:msg, 0)
@@ -54,11 +46,17 @@ function! livemark#move_cursor() abort
   endif
   let msg = {}
   let msg.line = line('w0')
+  let msg.event = 'move'
   call s:send(msg)
 endfunction
 
 function! livemark#update_preview() abort
-  call s:send(s:get_msg())
+  let msg = {}
+  let msg.text = getline(0, '$')
+  let msg.line = line('w0')
+  let msg.ext = &filetype
+  let msg.event = 'update'
+  call s:send(msg)
 endfunction
 
 function! s:check_pymodule(module) abort

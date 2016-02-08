@@ -115,11 +115,14 @@ class Server(object):
 
         msg = json.loads(data.decode())[1]
         line = msg['line']
-        if 'text' in msg:
+        event = msg['event']
+        if event == 'update':
             self.tlist = msg['text']
             _task = self.update_preview
-        else:
+        elif event == 'move':
             _task = self.move_cursor
+        else:
+            raise ValueError('Get unknown event: {}'.format(event))
 
         try:
             self._tasks.append(asyncio.ensure_future(_task(line)))
