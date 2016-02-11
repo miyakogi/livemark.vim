@@ -107,6 +107,9 @@ function! s:start_server() abort
       let l:options .= ' "' . css . '"'
     endfor
   endif
+  if len(g:livemark_highlight_theme)
+    let l:options .= ' --highlight-theme=' . g:livemark_highlight_theme
+  endif
 
   let cmd = g:livemark_python . ' ' . s:pyscript . l:options
   let s:server_pid = system(cmd)

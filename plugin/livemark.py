@@ -14,6 +14,7 @@ from tornado.platform.asyncio import AsyncIOMainLoop
 
 import misaka as m
 from pygments import highlight
+from pygments.styles import STYLE_MAP
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, PythonLexer
 
@@ -31,7 +32,6 @@ connections = []
 CURSOR_TAG = '<span id="vimcursor"></span>' 
 static_dir = path.join(current_dir, 'static')
 template_dir = path.join(current_dir, 'template')
-pygments_style = HtmlFormatter(style='default').get_style_defs()
 
 options.parser.define('browser', default='google-chrome', type=str)
 options.parser.define('browser-port', default=8089, type=int)
@@ -42,6 +42,7 @@ options.parser.define('no-default-css', default=False, action='store_const',
                       const=True)
 options.parser.define('js-files', default=[], nargs='+')
 options.parser.define('css-files', default=[], nargs='+')
+options.parser.define('highlight-theme', default='default', type=str)
 
 
 class HighlighterRenderer(m.HtmlRenderer):
@@ -268,8 +269,14 @@ def main():
         _user_static_dirs.add(path.dirname(css))
         doc.add_cssfile(css)
 
-
+    # choices arg is better, but detecting error is not easy in livemark.vim
+    if options.config.highlight_theme in STYLE_MAP:
+        pygments_style = HtmlFormatter(
+            style=options.config.highlight_theme).get_style_defs()
+    else:
+        pygments_style = HtmlFormatter('default').get_style_defs()
     doc.head.appendChild(Style(pygments_style))
+
     script = Script(parent=doc.body)
     script.innerHTML = '''
         function moveToElement(id) {
