@@ -12,6 +12,8 @@ let g:livemark_browser = get(g:, 'livemark_browser', 'google-chrome')
 let g:livemark_browser_port = get(g:, 'livemark_browser_port', 8089)
 let g:livemark_no_default_js = get(g:, 'livemark_no_default_js', 0)
 let g:livemark_no_default_css = get(g:, 'livemark_no_default_css', 0)
+let g:livemark_js_files = get(g:, 'livemark_js_files', [])
+let g:livemark_css_files = get(g:, 'livemark_css_files', [])
 let g:livemark_vim_port = get(g:, 'livemark_vim_port', 8090)
 let g:livemark_force_pysocket = get(g:, 'livemark_force_pysocket', 0)
 

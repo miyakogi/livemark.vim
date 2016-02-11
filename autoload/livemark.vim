@@ -95,8 +95,20 @@ function! s:start_server() abort
     let l:options .= ' --no-default-css'
   endif
 
+  if len(g:livemark_js_files)
+    let l:options .= ' --js-files'
+    for js in g:livemark_js_files
+      let l:options .= ' ' . js
+    endfor
+  endif
+  if len(g:livemark_css_files)
+    let l:options .= ' --css-files'
+    for css in g:livemark_css_files
+      let l:options .= ' "' . css . '"'
+    endfor
+  endif
+
   let cmd = g:livemark_python . ' ' . s:pyscript . l:options
-  echomsg cmd
   let s:server_pid = system(cmd)
 endfunction
 

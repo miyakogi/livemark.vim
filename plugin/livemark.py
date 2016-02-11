@@ -31,7 +31,7 @@ connections = []
 CURSOR_TAG = '<span id="vimcursor"></span>' 
 static_dir = path.join(current_dir, 'static')
 template_dir = path.join(current_dir, 'template')
-css = HtmlFormatter(style='default').get_style_defs()
+pygments_style = HtmlFormatter(style='default').get_style_defs()
 
 options.parser.define('browser', default='google-chrome', type=str)
 options.parser.define('browser-port', default=8089, type=int)
@@ -40,6 +40,8 @@ options.parser.define('no-default-js', default=False, action='store_const',
                       const=True)
 options.parser.define('no-default-css', default=False, action='store_const',
                       const=True)
+options.parser.define('js-files', default=[], nargs='+')
+options.parser.define('css-files', default=[], nargs='+')
 
 
 class HighlighterRenderer(m.HtmlRenderer):
@@ -258,7 +260,16 @@ def main():
     if not options.config.no_default_css:
         doc.add_cssfile('static/bootstrap.min.css')
 
-    doc.head.appendChild(Style(css))
+    _user_static_dirs = set()
+    for js in options.config.js_files:
+        _user_static_dirs.add(path.dirname(js))
+        doc.add_jsfile(js)
+    for css in options.config.css_files:
+        _user_static_dirs.add(path.dirname(css))
+        doc.add_cssfile(css)
+
+
+    doc.head.appendChild(Style(pygments_style))
     script = Script(parent=doc.body)
     script.innerHTML = '''
         function moveToElement(id) {
@@ -275,6 +286,8 @@ def main():
     mount_point.appendChild(H2('LiveMark is running...'))
     app = get_app(doc)
     app.add_static_path('static', static_dir)
+    for _d in _user_static_dirs:
+        app.add_static_path(_d, _d)
     web_server = start_server(app, port=options.config.browser_port)
 
     loop = asyncio.get_event_loop()
