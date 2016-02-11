@@ -52,7 +52,7 @@ class HighlighterRenderer(m.HtmlRenderer):
         else:
             lexer = get_lexer_by_name('python', stripall=True)
             lexer = PythonLexer()
-            formatter = HtmlFormatter(linenos=True, cssclass="source")
+            formatter = HtmlFormatter()
             html = highlight(text, lexer, formatter)
             return html
 
