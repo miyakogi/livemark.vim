@@ -71,6 +71,15 @@ The following setting forces to use `python` to send markdown text, instead of `
 let g:livemark_force_pysocket = 1  "default: 0
 ```
 
+#### CSS/JS files
+
+By default, [Honoka](http://honokak.osaka/) bootstrap theme is used for preview. If you don't want to include related css/js files (jQuery, bootstrap.js and bootstrap.css), use the following options.
+
+```vim
+let g:livemark_no_default_js = 1
+let g:livemark_no_default_css = 1
+```
+
 ## Screen cast
 
 <img src="https://raw.githubusercontent.com/miyakogi/livemark.vim/master/sample.gif">
