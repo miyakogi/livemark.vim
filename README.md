@@ -40,7 +40,7 @@ This plugin uses python3 installed in your path by default.
 If you want to use another python, you can specify the path as follows:
 
 ```vim
-let g:livemark_python = '/path/to/python/binary'
+let g:livemark_python = '/path/to/python/binary'  " default 'python3'
 ```
 
 #### Browser
@@ -73,11 +73,18 @@ let g:livemark_force_pysocket = 1  "default: 0
 
 #### CSS/JS files
 
-By default, [Honoka](http://honokak.osaka/) bootstrap theme is used for preview. If you don't want to include related css/js files (jQuery, bootstrap.js and bootstrap.css), use the following options.
+By default, [Honoka](http://honokak.osaka/) bootstrap theme is used for preview. If you want to use other css/js, use these options.
 
 ```vim
-let g:livemark_no_default_js = 1
-let g:livemark_no_default_css = 1
+let g:livemark_js_files = [expand('~/path/to/your/js_file.js')]     " default []
+let g:livemark_css_files = [expand('~/path/to/your/css_file.css')]  " default []
+```
+
+If you don't want to include defualt css/js files (jQuery, bootstrap.js and bootstrap.css), use these options.
+
+```vim
+let g:livemark_no_default_js = 1   " default 0
+let g:livemark_no_default_css = 1  " default 0
 ```
 
 ## Screen cast
