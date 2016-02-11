@@ -88,7 +88,15 @@ function! s:start_server() abort
   let l:options = ' --browser=' . g:livemark_browser
         \     . ' --browser-port=' . g:livemark_browser_port
         \     . ' --vim-port=' . g:livemark_vim_port
+  if g:livemark_no_default_js
+    let l:options .= ' --no-default-js'
+  endif
+  if g:livemark_no_default_css
+    let l:options .= ' --no-default-css'
+  endif
+
   let cmd = g:livemark_python . ' ' . s:pyscript . l:options
+  echomsg cmd
   let s:server_pid = system(cmd)
 endfunction
 

@@ -36,6 +36,10 @@ css = HtmlFormatter(style='default').get_style_defs()
 options.parser.define('browser', default='google-chrome', type=str)
 options.parser.define('browser-port', default=8089, type=int)
 options.parser.define('vim-port', default=8090, type=int)
+options.parser.define('no-default-js', default=False, action='store_const',
+                      const=True)
+options.parser.define('no-default-css', default=False, action='store_const',
+                      const=True)
 
 
 class HighlighterRenderer(m.HtmlRenderer):
@@ -246,10 +250,14 @@ def main():
     AsyncIOMainLoop().install()
 
     doc = get_document()
-    doc.add_jsfile(
-        'https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js')
-    doc.add_jsfile('static/bootstrap.min.js')
-    doc.add_cssfile('static/bootstrap.min.css')
+
+    if not options.config.no_default_js:
+        doc.add_jsfile(
+            'https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js')
+        doc.add_jsfile('static/bootstrap.min.js')
+    if not options.config.no_default_css:
+        doc.add_cssfile('static/bootstrap.min.css')
+
     doc.head.appendChild(Style(css))
     script = Script(parent=doc.body)
     script.innerHTML = '''
