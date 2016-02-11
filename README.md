@@ -87,6 +87,21 @@ let g:livemark_no_default_js = 1   " default 0
 let g:livemark_no_default_css = 1  " default 0
 ```
 
+#### Syntax highlighting
+
+Livemark.vim supports code blocks and syntax highlighting.
+If you change theme of the code block, add the below option.
+
+```vim
+let g:livemark_highlight_theme = 'friendly'  " default ''
+```
+
+To list all available themes, run below command in shell.
+
+```sh
+python3 -c "import pygments.styles; print(pygments.styles.STYLE_MAP.keys())"
+```
+
 ## Screen cast
 
 <img src="https://raw.githubusercontent.com/miyakogi/livemark.vim/master/sample.gif">
