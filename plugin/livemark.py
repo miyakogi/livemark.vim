@@ -94,6 +94,7 @@ class Server(object):
         self.script = None
         self.mount_point = mount_point
         self.tlist = []
+        self.dom_tree = None
 
         self.listener = VimListener
         self.listener.connection_made = self.connection_made
@@ -151,10 +152,14 @@ class Server(object):
     @asyncio.coroutine
     def mount_html(self, html):
         fragment = parse_html(html)
+        self.dom_tree = fragment
         if self.mount_point.length < 1:
-            self.mount_point.appendChild(fragment)
+            self.mount_point.appendChild(self.dom_tree)
         else:
-            diff = yield from self.find_diff_node(fragment)
+            diff = yield from self.find_diff_node(self.dom_tree)
+            print('inserted', diff['inserted'])
+            print('deleted', diff['deleted'])
+            print('appended', diff['appended'])
             for _i in diff['inserted']:
                 self.mount_point.insertBefore(_i[1], _i[0])
             for _d in diff['deleted']:
@@ -175,24 +180,32 @@ class Server(object):
                 i += 1
         cur_line = line - blank_lines
 
-        if self.mount_point is not None and self.mount_point.ownerDocument:
+        node_n = 0
+        if self.dom_tree is not None and self.mount_point.ownerDocument:
             _l = 0
-            elm = self.mount_point.firstChild
+            elm = self.dom_tree.firstChild
             while elm is not None:
-                yield from asyncio.sleep(0.0)
+                if elm.nodeName != '#text':
+                    node_n += 1
                 _l += elm.textContent.count('\n')
                 if _l >= cur_line:
                     break
                 elm = elm.nextSibling
 
-            if elm is not None:
-                if isinstance(elm, WebElement):
-                    self.move_to(elm.id)
+            if node_n >= len(self.mount_point):
+                top_node = self.mount_point.lastChild
+                print('last child')
+            else:
+                top_node = self.mount_point.childNodes[node_n]
+                print(node_n, top_node.html)
+            if top_node is not None:
+                if isinstance(top_node, WebElement):
+                    self.move_to(top_node.id)
                 else:
-                    while elm is not None:
-                        elm = elm.previousSibling
-                        if isinstance(elm, WebElement):
-                            self.move_to(elm.id)
+                    while top_node is not None:
+                        top_node = top_node.previousSibling
+                        if isinstance(top_node, WebElement):
+                            self.move_to(top_node.id)
                             break
 
     def move_to(self, id):
@@ -202,25 +215,40 @@ class Server(object):
     def _is_same_node(self, node1, node2):
         if node1.nodeType == node2.nodeType:
             if node1.nodeType == node1.TEXT_NODE:
+                print(node1.textContent, node2.textContent)
                 return node1.textContent == node2.textContent
             else:
+                print(node1.html_noid, node2.html_noid)
                 return node1.html_noid == node2.html_noid
         else:
             return False
+
+    def _next_nonempty(self, node):
+        new_node = node.nextSibling
+        while new_node is not None:
+            if isinstance(new_node, WebElement):
+                return new_node
+            else:
+                text = new_node.textContent
+                if text and not text.isspace():
+                    return new_node
+                new_node = new_node.nextSibling
+        return None
 
     @asyncio.coroutine
     def find_diff_node(self, tree):
         _deleted = []
         _inserted = []
+        _appended = []
 
         node1 = self.mount_point.firstChild
         node2 = tree.firstChild
         last_node2 = node2
-        while node1 is not None and node2 is not None:  # Loop over old html
+        while node1 is not None and last_node2 is not None:  # Loop over old html
             yield from asyncio.sleep(0.0)
             if self._is_same_node(node1, node2):
-                node1 = node1.nextSibling
-                node2 = node2.nextSibling
+                node1 = self._next_nonempty(node1)
+                node2 = self._next_nonempty(node2)
                 last_node2 = node2
             else:
                 _pending = [node2]
@@ -228,23 +256,29 @@ class Server(object):
                     node2 = node2.nextSibling
                     if node2 is None:
                         _deleted.append(node1)
-                        node1 = node1.nextSibling
+                        node1 = self._next_nonempty(node1)
                         node2 = last_node2
                         break
                     elif self._is_same_node(node1, node2):
                         for n in _pending:
                             _inserted.append((node1, n))
-                        node1 = node1.nextSibling
-                        node2 = node2.nextSibling
+                        node1 = self._next_nonempty(node1)
+                        node2 = self._next_nonempty(node2)
                         last_node2 = node2
                         break
                     else:
                         _pending.append(node2)
-        n = last_node2
-        _appended = []
-        while n is not None:
-            _appended.append(n)
-            n = n.nextSibling
+
+        if node1 is not None:
+            n = node1
+            while n is not None:
+                _deleted.append(n)
+                n = self._next_nonempty(n)
+        elif last_node2 is not None:
+            n = last_node2
+            while n is not None:
+                _appended.append(n)
+                n = self._next_nonempty(n)
 
         return {'deleted': _deleted, 'inserted': _inserted,
                 'appended': _appended}
@@ -285,7 +319,6 @@ def main():
                 var x = window.scrollX
                 var rect = elm.getBoundingClientRect()
                 window.scrollTo(x, rect.top + window.scrollY)
-                console.log(elm.textContent)
             }
         }
     '''
