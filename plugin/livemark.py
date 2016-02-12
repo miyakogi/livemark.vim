@@ -80,6 +80,29 @@ class VimListener(asyncio.Protocol):
     pass
 
 
+def _is_same_node(node1, node2):
+    if node1.nodeType == node2.nodeType:
+        if node1.nodeType == node1.TEXT_NODE:
+            return node1.textContent == node2.textContent
+        else:
+            return node1.html_noid == node2.html_noid
+    else:
+        return False
+
+
+def _next_noempty(node):
+    new_node = node.nextSibling
+    while new_node is not None:
+        if isinstance(new_node, WebElement):
+            return new_node
+        else:
+            text = new_node.textContent
+            if text and not text.isspace():
+                return new_node
+            new_node = new_node.nextSibling
+    return None
+
+
 class Server(object):
     def __init__(self, address='localhost', port=8090, loop=None, doc=None,
                  mount_point=None):
@@ -157,9 +180,6 @@ class Server(object):
             self.mount_point.appendChild(self.dom_tree)
         else:
             diff = yield from self.find_diff_node(self.dom_tree)
-            print('inserted', diff['inserted'])
-            print('deleted', diff['deleted'])
-            print('appended', diff['appended'])
             for _i in diff['inserted']:
                 self.mount_point.insertBefore(_i[1], _i[0])
             for _d in diff['deleted']:
@@ -194,10 +214,8 @@ class Server(object):
 
             if node_n >= len(self.mount_point):
                 top_node = self.mount_point.lastChild
-                print('last child')
             else:
                 top_node = self.mount_point.childNodes[node_n]
-                print(node_n, top_node.html)
             if top_node is not None:
                 if isinstance(top_node, WebElement):
                     self.move_to(top_node.id)
@@ -212,29 +230,6 @@ class Server(object):
         script = 'moveToElement("{}")'.format(id)
         self.mount_point.js_exec('eval', script=script)
 
-    def _is_same_node(self, node1, node2):
-        if node1.nodeType == node2.nodeType:
-            if node1.nodeType == node1.TEXT_NODE:
-                print(node1.textContent, node2.textContent)
-                return node1.textContent == node2.textContent
-            else:
-                print(node1.html_noid, node2.html_noid)
-                return node1.html_noid == node2.html_noid
-        else:
-            return False
-
-    def _next_nonempty(self, node):
-        new_node = node.nextSibling
-        while new_node is not None:
-            if isinstance(new_node, WebElement):
-                return new_node
-            else:
-                text = new_node.textContent
-                if text and not text.isspace():
-                    return new_node
-                new_node = new_node.nextSibling
-        return None
-
     @asyncio.coroutine
     def find_diff_node(self, tree):
         _deleted = []
@@ -246,9 +241,9 @@ class Server(object):
         last_node2 = node2
         while node1 is not None and last_node2 is not None:  # Loop over old html
             yield from asyncio.sleep(0.0)
-            if self._is_same_node(node1, node2):
-                node1 = self._next_nonempty(node1)
-                node2 = self._next_nonempty(node2)
+            if _is_same_node(node1, node2):
+                node1 = _next_noempty(node1)
+                node2 = _next_noempty(node2)
                 last_node2 = node2
             else:
                 _pending = [node2]
@@ -256,14 +251,14 @@ class Server(object):
                     node2 = node2.nextSibling
                     if node2 is None:
                         _deleted.append(node1)
-                        node1 = self._next_nonempty(node1)
+                        node1 = _next_noempty(node1)
                         node2 = last_node2
                         break
-                    elif self._is_same_node(node1, node2):
+                    elif _is_same_node(node1, node2):
                         for n in _pending:
                             _inserted.append((node1, n))
-                        node1 = self._next_nonempty(node1)
-                        node2 = self._next_nonempty(node2)
+                        node1 = _next_noempty(node1)
+                        node2 = _next_noempty(node2)
                         last_node2 = node2
                         break
                     else:
@@ -273,12 +268,12 @@ class Server(object):
             n = node1
             while n is not None:
                 _deleted.append(n)
-                n = self._next_nonempty(n)
+                n = _next_noempty(n)
         elif last_node2 is not None:
             n = last_node2
             while n is not None:
                 _appended.append(n)
-                n = self._next_nonempty(n)
+                n = _next_noempty(n)
 
         return {'deleted': _deleted, 'inserted': _inserted,
                 'appended': _appended}
