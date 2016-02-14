@@ -100,23 +100,23 @@ function! s:start_server() abort
 
   if len(g:livemark_js_files) || !g:livemark_no_default_js
     let l:options .= ' --js-files'
-    for js in g:livemark_js_files
-      let l:options .= ' ' . js
-    endfor
     if !g:livemark_no_default_js
       let l:options .= ' ' . '"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"'
       let l:options .= ' ' . s:static_dir . '/bootstrap.min.js'
+    for js in g:livemark_js_files
+      let l:options .= ' "' . js . '"'
+    endfor
     endif
   endif
 
   if len(g:livemark_css_files) || !g:livemark_no_default_css
     let l:options .= ' --css-files'
-    for css in g:livemark_css_files
-      let l:options .= ' "' . css . '"'
-    endfor
     if !g:livemark_no_default_js
       let l:options .= ' ' . s:static_dir . '/bootstrap.min.css'
     endif
+    for css in g:livemark_css_files
+      let l:options .= ' "' . css . '"'
+    endfor
   endif
 
   if len(g:livemark_highlight_theme)
