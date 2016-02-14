@@ -102,6 +102,14 @@ To list all available themes, run below command in shell.
 python3 -c "import pygments.styles; print(pygments.styles.STYLE_MAP.keys())"
 ```
 
+#### Disable cursor sync
+
+To disable auto scroll, add this in your vimrc
+
+```vim
+let g:livemark_disable_scroll = 1
+```
+
 ## Screen cast
 
 <img src="https://raw.githubusercontent.com/miyakogi/livemark.vim/master/sample.gif">
