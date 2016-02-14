@@ -111,7 +111,7 @@ function! s:start_server() abort
 
   if len(g:livemark_css_files) || !g:livemark_no_default_css
     let l:options .= ' --css-files'
-    if !g:livemark_no_default_js
+    if !g:livemark_no_default_css
       let l:options .= ' ' . s:static_dir . '/bootstrap.min.css'
     endif
     for css in g:livemark_css_files
