@@ -1,6 +1,3 @@
-[submodule "plugin/wdom"]
-	path = plugin/wdom
-	url = https://github.com/miyakogi/wdom_py
 [submodule "plugin/livemark"]
 	path = plugin/livemark
 	url = https://github.com/miyakogi/livemark
