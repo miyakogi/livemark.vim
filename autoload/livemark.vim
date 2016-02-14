@@ -46,6 +46,9 @@ function! livemark#move_cursor() abort
     let s:initialized_preview = 1
     return
   endif
+  if g:livemark_disable_scroll
+    return
+  endif
   let msg = {}
   let msg.line = line('w0')
   let msg.event = 'move'
@@ -55,7 +58,11 @@ endfunction
 function! livemark#update_preview() abort
   let msg = {}
   let msg.text = getline(0, '$')
-  let msg.line = line('w0')
+  if g:livemark_disable_scroll
+    let msg.line = -1
+  else
+    let msg.line = line('w0')
+  endif
   let msg.ext = &filetype
   let msg.event = 'update'
   call s:send(msg)
