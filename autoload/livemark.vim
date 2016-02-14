@@ -1,7 +1,9 @@
 scriptencoding utf-8
 
 let s:requred_modules = ['tornado', 'misaka', 'pygments']
-let s:pyscript = expand('<sfile>:p:h:h') . '/plugin/run.py'
+let s:root_dir = expand('<sfile>:p:h:h')
+let s:static_dir = s:root_dir . '/static'
+let s:pyscript = s:root_dir . '/plugin/run.py'
 let s:server_pid = 0
 let s:initialized_preview = 0
 
@@ -88,25 +90,28 @@ function! s:start_server() abort
   let l:options = ' --browser=' . g:livemark_browser
         \     . ' --browser-port=' . g:livemark_browser_port
         \     . ' --vim-port=' . g:livemark_vim_port
-  if g:livemark_no_default_js
-    let l:options .= ' --no-default-js'
-  endif
-  if g:livemark_no_default_css
-    let l:options .= ' --no-default-css'
-  endif
 
-  if len(g:livemark_js_files)
+  if len(g:livemark_js_files) || !g:livemark_no_default_js
     let l:options .= ' --js-files'
     for js in g:livemark_js_files
       let l:options .= ' ' . js
     endfor
+    if !g:livemark_no_default_js
+      let l:options .= ' ' . '"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"'
+      let l:options .= ' ' . s:static_dir . '/bootstrap.min.js'
+    endif
   endif
-  if len(g:livemark_css_files)
+
+  if len(g:livemark_css_files) || !g:livemark_no_default_css
     let l:options .= ' --css-files'
     for css in g:livemark_css_files
       let l:options .= ' "' . css . '"'
     endfor
+    if !g:livemark_no_default_js
+      let l:options .= ' ' . s:static_dir . '/bootstrap.min.css'
+    endif
   endif
+
   if len(g:livemark_highlight_theme)
     let l:options .= ' --highlight-theme=' . g:livemark_highlight_theme
   endif
