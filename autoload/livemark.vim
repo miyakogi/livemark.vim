@@ -134,7 +134,7 @@ function! s:stop_server() abort
 endfunction
 
 function! s:check_features() abort
-  if v:version < 704 || !has('patch1263') || !has('channel') 
+  if v:version < 704 || !has('patch1385') || !has('channel') 
     if !has('python')
       echoerr 'Livemark.vim requires vim which supports "channel" or "python".'
       return 1

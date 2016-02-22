@@ -4,7 +4,7 @@ Real-time markdown preview plugin for vim.
 
 ## Requirements
 
-Vim which has `+channel with patch7.4.1263` **or** `+python` feature.
+Latest Vim which has `+channel` **or** `+python` feature.
 
 Python 3.4+ (3.5+ is better) and some libraries (misaka, pygments, tornado) are also required to be installed in your `$PATH`.
 
