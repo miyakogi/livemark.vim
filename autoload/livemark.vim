@@ -8,8 +8,8 @@ let s:server_pid = 0
 let s:initialized_preview = 0
 
 function! s:send_by_channel(msg) abort
-  let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json', 'waittime':3000})
-  call ch_sendexpr(handle, a:msg, 0)
+  let handle = ch_open('localhost:' . g:livemark_vim_port, {'mode': 'json', 'waittime': 3000, 'timeout': 0})
+  call ch_sendexpr(handle, a:msg)
   call ch_close(handle)
 endfunction
 
