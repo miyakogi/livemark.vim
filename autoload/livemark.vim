@@ -94,14 +94,14 @@ function! s:check_pymodules() abort
 endfunction
 
 function! s:start_server() abort
-  let l:options = ' --browser=' . g:livemark_browser
-        \     . ' --browser-port=' . g:livemark_browser_port
-        \     . ' --vim-port=' . g:livemark_vim_port
+  let l:options = ' --browser "' . g:livemark_browser . '"'
+        \     . ' --browser-port ' . g:livemark_browser_port
+        \     . ' --vim-port ' . g:livemark_vim_port
 
   if len(g:livemark_js_files) || !g:livemark_no_default_js
     let l:options .= ' --js-files'
     if !g:livemark_no_default_js
-      let l:options .= ' ' . '"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"'
+      let l:options .= ' "https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"'
       let l:options .= ' "' . s:static_dir . '/bootstrap.min.js"'
     for js in g:livemark_js_files
       let l:options .= ' "' . js . '"'
@@ -120,7 +120,7 @@ function! s:start_server() abort
   endif
 
   if len(g:livemark_highlight_theme)
-    let l:options .= ' --highlight-theme=' . g:livemark_highlight_theme
+    let l:options .= ' --highlight-theme "' . g:livemark_highlight_theme . '"'
   endif
 
   let cmd = g:livemark_python . ' ' . s:pyscript . l:options
