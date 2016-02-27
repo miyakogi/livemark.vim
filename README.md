@@ -6,7 +6,7 @@ Real-time markdown preview plugin for vim.
 
 Latest Vim which has `+channel` **or** `+python` feature.
 
-Python 3.4+ (3.5+ is better) and some libraries (misaka, pygments, tornado) are also required to be installed in your `$PATH`.
+Python 3.5+ and some libraries (misaka, pygments, tornado) are also required to be installed in your `$PATH`.
 
 To install them:
 
