@@ -125,6 +125,10 @@ function! s:start_server() abort
 
   let cmd = g:livemark_python . ' ' . s:pyscript . l:options
   let s:server_pid = system(cmd)
+  if match(s:server_pid, '\D') >= 0
+    call livemark#disable_livemark()
+    echoerr 'Failed to start livemark server: ' . s:server_pid
+  endif
 endfunction
 
 function! s:stop_server() abort
@@ -156,13 +160,13 @@ function! livemark#enable_livemark() abort
   if !has('channel') || g:livemark_force_pysocket
     call s:initialize_pysocket()
   endif
-  call s:start_server()
   augroup livemark
     autocmd!
     autocmd TextChanged,TextChangedI <buffer> call livemark#update_preview()
     autocmd CursorMoved <buffer> call livemark#move_cursor()
     autocmd VimLeave * call s:stop_server()
   augroup END
+  call s:start_server()
 endfunction
 
 function! livemark#disable_livemark() abort
