@@ -7,7 +7,7 @@ import time
 import subprocess
 
 if __name__ == '__main__':
-    script = path.join(path.dirname(__file__), 'livemark/livemark.py')
+    script = path.join(path.dirname(__file__), 'livemark/livemark')
     args = [sys.executable, script] + sys.argv[1:]
     p = subprocess.Popen(args, stderr=subprocess.PIPE)
     time.sleep(1)  # Wait for server startup
