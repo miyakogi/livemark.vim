@@ -132,7 +132,7 @@ function! s:start_server() abort
 endfunction
 
 function! s:stop_server() abort
-  if s:server_pid
+  if match(s:server_pid, '\D') < 0
     call system('kill ' . s:server_pid)
   endif
 endfunction
