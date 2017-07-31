@@ -11,7 +11,7 @@ Python 3.5+ and some libraries (misaka, pygments, tornado) are also required to 
 To install them:
 
 ```
-pip3 install misaka pygments tornado
+pip3 install misaka pygments "tornado>=4"
 ```
 
 Thanks to the new channel feature, this plugin does not requre `+python`, `+python3`, or any other process control plugins.
